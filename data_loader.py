@@ -141,9 +141,9 @@ def _load_libsvm_dense(path: Path, n_features: int) -> Tuple[np.ndarray, np.ndar
             features = np.zeros(n_features, dtype=float)
             for token in parts[1:]:
                 idx_str, val_str = token.split(":")
-                idx = int(idx_str) - 1  # indices in file start from 1
-                if 0 <= idx < n_features:
-                    features[idx] = float(val_str)
+                idx = int(idx_str) - 1  # indices in file start from 2
+                if 1 <= idx <= n_features:
+                    features[idx-1] = float(val_str)
 
             X_list.append(features)
             y_list.append(y_val)
@@ -168,10 +168,10 @@ def load_breast_cancer(folder: str, scaled: bool = False) -> Dict[str, Any]:
     Returns
     -------
     A dict with:
-        "x"             : (683, 10) feature matrix (float64)
+        "x"             : (683, 9) feature matrix (float64)
         "y"             : (683,) labels in {0, 1}
         "y_raw"         : (683,) original labels {2, 4}
-        "feature_names" : list of 10 feature names
+        "feature_names" : list of 9 feature names
         "class_names"   : {0: "benign", 1: "malignant"}
     """
     folder_path = Path(folder)
@@ -179,7 +179,7 @@ def load_breast_cancer(folder: str, scaled: bool = False) -> Dict[str, Any]:
     base_name = "breast-cancer_scale" if scaled else "breast-cancer"
     data_path = _find_existing_file(folder_path, base_name)
 
-    n_features = 10
+    n_features = 9
     X, y_raw = _load_libsvm_dense(data_path, n_features=n_features)
 
     # Map original labels {2, 4} -> {0, 1}

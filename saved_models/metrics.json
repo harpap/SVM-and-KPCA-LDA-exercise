@@ -1,0 +1,68 @@
+[
+  {
+    "name": "LinearSVC_C1",
+    "train_time": 27.458891408052295,
+    "test_accuracy": 0.3385,
+    "test_macro_f1": 0.3191178319042876
+  },
+  {
+    "name": "SVC_poly_deg3_C1",
+    "train_time": 215.21205796394497,
+    "test_accuracy": 0.44,
+    "test_macro_f1": 0.4412348287022736
+  },
+  {
+    "name": "SVC_linear_C1",
+    "train_time": 361.95542171713896,
+    "test_accuracy": 0.254,
+    "test_macro_f1": 0.21673848619049566
+  },
+  {
+    "name": "SVC_rbf_C1_gamma1e-3",
+    "train_time": 379.487644164823,
+    "test_accuracy": 0.243,
+    "test_macro_f1": 0.19651748407756187
+  },
+  {
+    "name": "SVC_rbf_C10_gamma1e-3",
+    "train_time": 377.7860708341468,
+    "test_accuracy": 0.243,
+    "test_macro_f1": 0.19651748407756187
+  },
+  {
+    "name": "SVC_rbf_C100_gamma1e-3",
+    "train_time": 377.75095373089425,
+    "test_accuracy": 0.243,
+    "test_macro_f1": 0.19651748407756187
+  },
+  {
+    "name": "SVC_poly_deg3_C1_with_scaling",
+    "train_time": 286.65420057903975,
+    "test_accuracy": 0.3845,
+    "test_macro_f1": 0.3958552919890174
+  },
+  {
+    "name": "LinearSVC_HOG_C1",
+    "train_time": 15.538587915012613,
+    "test_accuracy": 0.478,
+    "test_macro_f1": 0.47134891475068896
+  },
+  {
+    "name": "RBF_HOG_C10_gamma_scale",
+    "train_time": 25.189771639881656,
+    "test_accuracy": 0.559,
+    "test_macro_f1": 0.5584818026910615
+  },
+  {
+    "name": "RBF_HOG_C10_gamma_scale_whole",
+    "train_time": 1087.5311743209604,
+    "test_accuracy": 0.6362,
+    "test_macro_f1": 0.6359570393230276
+  },
+  {
+    "name": "RBF_HOG_C150_gamma_scale_whole",
+    "train_time": 1203.8225624759216,
+    "test_accuracy": 0.6366,
+    "test_macro_f1": 0.636397249132555
+  }
+]

@@ -1,3 +1,14 @@
 breast-cancer
 cifar-10-batches-py
 __pycache__/data_loader.cpython-311.pyc
+saved_models/LinearSVC_HOG_C1.joblib
+saved_models/RBF_HOG_C10_gamma_scale_whole.joblib
+saved_models/LinearSVC_C1.joblib
+saved_models/RBF_HOG_C10_gamma_scale.joblib
+saved_models/RBF_HOG_C150_gamma_scale_whole.joblib
+saved_models/SVC_linear_C1.joblib
+saved_models/SVC_poly_deg3_C1_with_scaling.joblib
+saved_models/SVC_poly_deg3_C1.joblib
+saved_models/SVC_rbf_C1_gamma1e-3.joblib
+saved_models/SVC_rbf_C10_gamma1e-3.joblib
+saved_models/SVC_rbf_C100_gamma1e-3.joblib
