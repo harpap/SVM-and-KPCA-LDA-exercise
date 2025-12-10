@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Dataset loader utilities for the SVM / KPCA / LDA exercise.
 
@@ -14,10 +13,6 @@ from typing import Dict, Any, Tuple, List
 
 import numpy as np
 
-
-# ----------------------------------------------------------------------
-# CIFAR-10
-# ----------------------------------------------------------------------
 def _load_cifar_batch(batch_path: Path) -> Tuple[np.ndarray, np.ndarray]:
     """
     Load a single CIFAR-10 batch file.
@@ -28,13 +23,11 @@ def _load_cifar_batch(batch_path: Path) -> Tuple[np.ndarray, np.ndarray]:
     labels : np.ndarray, shape (N,), dtype int64
     """
     with open(batch_path, "rb") as f:
-        # CIFAR-10 python version was pickled with Python 2
         batch = pickle.load(f, encoding="latin1")
 
     data = batch["data"]  # shape (N, 3072)
     labels = np.array(batch["labels"], dtype=np.int64)
 
-    # reshape to (N, 3, 32, 32) then to (N, 32, 32, 3)
     images = data.reshape(-1, 3, 32, 32)
     images = images.transpose(0, 2, 3, 1)
 
@@ -64,7 +57,7 @@ def load_cifar10(folder: str) -> Dict[str, Any]:
     """
     folder_path = Path(folder)
 
-    # --- load training batches ---
+    # load training batches
     train_images_list = []
     train_labels_list = []
 
@@ -77,11 +70,11 @@ def load_cifar10(folder: str) -> Dict[str, Any]:
     x_train = np.concatenate(train_images_list, axis=0)
     y_train = np.concatenate(train_labels_list, axis=0)
 
-    # --- load test batch ---
+    #load test batch
     test_file = folder_path / "test_batch"
     x_test, y_test = _load_cifar_batch(test_file)
 
-    # --- load meta (label names) ---
+    #load meta (label names)
     meta_file = folder_path / "batches.meta"
     with open(meta_file, "rb") as f:
         meta = pickle.load(f, encoding="latin1")
@@ -102,9 +95,6 @@ def load_cifar10(folder: str) -> Dict[str, Any]:
     }
 
 
-# ----------------------------------------------------------------------
-# Breast cancer (UCI / LIBSVM format)
-# ----------------------------------------------------------------------
 def _find_existing_file(folder: Path, base_name: str) -> Path:
     """
     Try a few common extensions and return the first existing path.
@@ -209,9 +199,6 @@ def load_breast_cancer(folder: str, scaled: bool = False) -> Dict[str, Any]:
     }
 
 
-# ----------------------------------------------------------------------
-# CLI
-# ----------------------------------------------------------------------
 if __name__ == "__main__":
     import argparse
 
