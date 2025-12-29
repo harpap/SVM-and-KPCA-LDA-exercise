@@ -143,6 +143,23 @@ def _load_libsvm_dense(path: Path, n_features: int) -> Tuple[np.ndarray, np.ndar
 
     return X, y_raw
 
+def _infer_libsvm_num_features(path: Path) -> int:
+    """
+    Infer number of features by scanning the max index in a LIBSVM file.
+    """
+    max_idx = 0
+    with open(path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            for token in parts[1:]:
+                idx_str, _ = token.split(":")
+                idx = int(idx_str)
+                if idx > max_idx:
+                    max_idx = idx
+    return max_idx
 
 def load_breast_cancer(folder: str, scaled: bool = False) -> Dict[str, Any]:
     """
@@ -198,6 +215,70 @@ def load_breast_cancer(folder: str, scaled: bool = False) -> Dict[str, Any]:
         "class_names": class_names,
     }
 
+def load_glass(folder: str) -> Dict[str, Any]:
+    """
+    Load the Glass Identification dataset from `folder`.
+
+    Expected file:
+        <folder>/glass.scale.txt
+
+    Returns
+    -------
+    A dict with:
+        "x"             : (N, 9) feature matrix (float64)  [or inferred feature count]
+        "y"             : (N,) integer labels 0..K-1
+        "y_raw"         : (N,) original labels (typically {1,2,3,5,6,7})
+        "feature_names" : list of feature names (RI, Na, Mg, Al, Si, K, Ca, Ba, Fe)
+        "class_names"   : dict mapping mapped label -> human name
+        "label_map"     : dict mapping original label -> mapped label
+    """
+    folder_path = Path(folder)
+    data_path = folder_path / "glass.scale.txt"
+    if not data_path.exists():
+        raise FileNotFoundError(f"Expected glass dataset at: {data_path}")
+
+    # Classic UCI glass has 9 numeric features; we keep 9 but will also tolerate
+    # files that differ by inferring n_features if needed.
+    feature_names = ["RI", "Na", "Mg", "Al", "Si", "K", "Ca", "Ba", "Fe"]
+
+    # Try 9 first; if file actually has a different max index, infer.
+    inferred = _infer_libsvm_num_features(data_path)
+    n_features = 9 if inferred == 9 else inferred
+
+    X, y_raw = _load_libsvm_dense(data_path, n_features=n_features)
+
+    # Map observed labels to 0..K-1 for scikit-learn convenience
+    uniq = np.unique(y_raw)
+    label_map = {int(lbl): i for i, lbl in enumerate(uniq)}
+    y = np.array([label_map[int(lbl)] for lbl in y_raw], dtype=int)
+
+    # Canonical names (UCI glass). Class 4 is typically absent.
+    canonical = {
+        1: "building_windows_float_processed",
+        2: "building_windows_non_float_processed",
+        3: "vehicle_windows_float_processed",
+        4: "vehicle_windows_non_float_processed",
+        5: "containers",
+        6: "tableware",
+        7: "headlamps",
+    }
+    class_names = {label_map[int(lbl)]: canonical.get(int(lbl), f"class_{int(lbl)}") for lbl in uniq}
+
+    # Feature name handling if n_features != 9
+    if n_features != 9:
+        # fall back to generic names if the file doesn't match the classic 9-feature schema
+        feature_names = feature_names[:n_features] if n_features < 9 else feature_names + [
+            f"f{i}" for i in range(10, n_features + 1)
+        ]
+
+    return {
+        "x": X,
+        "y": y,
+        "y_raw": y_raw,
+        "feature_names": feature_names,
+        "class_names": class_names,
+        "label_map": label_map,
+    }
 
 if __name__ == "__main__":
     import argparse
@@ -236,7 +317,7 @@ if __name__ == "__main__":
         print("x_test: ", dataset["x_test"].shape)
         print("y_test: ", dataset["y_test"].shape)
         print("label_names:", dataset["label_names"])
-    else:
+    elif args.dataset == "breast-cancer":
         dataset = load_breast_cancer(args.data_dir, scaled=args.scaled)
         print("Loaded breast-cancer dataset")
         print("x:", dataset["x"].shape)
@@ -244,3 +325,13 @@ if __name__ == "__main__":
         print("y_raw classes:", np.unique(dataset["y_raw"]))
         print("feature_names:", dataset["feature_names"])
         print("class_names:", dataset["class_names"])
+    else:
+        dataset = load_glass(args.data_dir)
+        print("Loaded glass dataset")
+        print("x:", dataset["x"].shape)
+        print("y:", dataset["y"].shape)
+        print("y_raw classes:", np.unique(dataset["y_raw"]))
+        print("mapped classes:", np.unique(dataset["y"]))
+        print("feature_names:", dataset["feature_names"])
+        print("class_names:", dataset["class_names"])
+        print("label_map:", dataset["label_map"])

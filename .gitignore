@@ -12,3 +12,4 @@ saved_models/SVC_poly_deg3_C1.joblib
 saved_models/SVC_rbf_C1_gamma1e-3.joblib
 saved_models/SVC_rbf_C10_gamma1e-3.joblib
 saved_models/SVC_rbf_C100_gamma1e-3.joblib
+glass/glass.scale.txt
