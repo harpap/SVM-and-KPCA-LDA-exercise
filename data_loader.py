@@ -143,10 +143,43 @@ def _load_libsvm_dense(path: Path, n_features: int) -> Tuple[np.ndarray, np.ndar
 
     return X, y_raw
 
+def _load_libsvm_dense_for_glass(path: Path, n_features: int) -> Tuple[np.ndarray, np.ndarray]:
+    X_list: List[np.ndarray] = []
+    y_list: List[int] = []
+
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            parts = line.split()
+            y_val = int(float(parts[0]))
+
+            features = np.zeros(n_features, dtype=float)
+
+            for token in parts[1:]:
+                if ":" not in token:
+                    continue
+                idx_str, val_str = token.split(":", 1)
+
+                idx0 = int(idx_str) - 1  # 1-based -> 0-based
+                if 0 <= idx0 < n_features:
+                    features[idx0] = float(val_str)
+                else:
+                    raise ValueError(
+                        f"Feature index {int(idx_str)} out of range for n_features={n_features}"
+                    )
+
+            X_list.append(features)
+            y_list.append(y_val)
+
+    X = np.vstack(X_list)
+    y_raw = np.array(y_list, dtype=int)
+    return X, y_raw
+
+
 def _infer_libsvm_num_features(path: Path) -> int:
-    """
-    Infer number of features by scanning the max index in a LIBSVM file.
-    """
     max_idx = 0
     with open(path, "r") as f:
         for line in f:
@@ -245,7 +278,7 @@ def load_glass(folder: str) -> Dict[str, Any]:
     inferred = _infer_libsvm_num_features(data_path)
     n_features = 9 if inferred == 9 else inferred
 
-    X, y_raw = _load_libsvm_dense(data_path, n_features=n_features)
+    X, y_raw = _load_libsvm_dense_for_glass(data_path, n_features=n_features)
 
     # Map observed labels to 0..K-1 for scikit-learn convenience
     uniq = np.unique(y_raw)
