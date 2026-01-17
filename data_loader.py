@@ -10,6 +10,7 @@ import os
 import pickle
 from pathlib import Path
 from typing import Dict, Any, Tuple, List
+from sklearn.datasets import fetch_openml
 
 import numpy as np
 
@@ -312,6 +313,69 @@ def load_glass(folder: str) -> Dict[str, Any]:
         "class_names": class_names,
         "label_map": label_map,
     }
+    
+def load_mnist(cache_dir: str = "data") -> Dict[str, Any]:
+    """
+    Load the MNIST dataset (OpenML: mnist_784).
+
+    Parameters
+    ----------
+    cache_dir : str, default "data"
+        Local cache directory for OpenML downloads.
+
+    Returns
+    -------
+    A dict with:
+        "x_train"     : (60000, 784) float32 in [0, 1]
+        "y_train"     : (60000,) int64 labels in {0..9}
+        "x_test"      : (10000, 784) float32 in [0, 1]
+        "y_test"      : (10000,) int64 labels in {0..9}
+        "x_train_img" : (60000, 28, 28, 1) float32 in [0, 1]
+        "x_test_img"  : (10000, 28, 28, 1) float32 in [0, 1]
+        "label_names" : list of 10 class names (strings "0".."9")
+    """
+    mnist = fetch_openml(
+        name="mnist_784",
+        version=1,
+        as_frame=False,
+        data_home=cache_dir,
+        parser="auto",
+    )
+
+    X = mnist.data
+    y = mnist.target
+
+    # OpenML returns y often as strings; convert to int64
+    y = y.astype(np.int64)
+
+    # Scale pixels to [0, 1]
+    # Some OpenML loaders give float already; be robust
+    X = X.astype(np.float32)
+    if X.max() > 1.0:
+        X /= 255.0
+
+    # Standard MNIST split: first 60k train, last 10k test
+    x_train = X[:60000]
+    y_train = y[:60000]
+    x_test = X[60000:]
+    y_test = y[60000:]
+
+    # Also provide image-shaped tensors (useful for CNN/HOG/etc.)
+    x_train_img = x_train.reshape(-1, 28, 28, 1)
+    x_test_img = x_test.reshape(-1, 28, 28, 1)
+
+    label_names = [str(i) for i in range(10)]
+
+    return {
+        "x_train": x_train,
+        "y_train": y_train,
+        "x_test": x_test,
+        "y_test": y_test,
+        "x_train_img": x_train_img,
+        "x_test_img": x_test_img,
+        "label_names": label_names,
+    }
+    
 
 if __name__ == "__main__":
     import argparse
@@ -322,8 +386,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         type=str,
-        choices=["cifar10", "breast-cancer"],
-        default="cifar10",
+        choices=["cifar10", "breast-cancer", "glass", "mnist"],
         help="Which dataset to load.",
     )
     parser.add_argument(
@@ -338,6 +401,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Use scaled version for breast-cancer (breast-cancer_scale). "
              "Ignored for CIFAR-10.",
+    )
+    parser.add_argument(
+        "--mnist-cache-dir",
+        type=str,
+        default="data",
+        help="Cache directory for MNIST download (OpenML).",
     )
 
     args = parser.parse_args()
@@ -358,7 +427,9 @@ if __name__ == "__main__":
         print("y_raw classes:", np.unique(dataset["y_raw"]))
         print("feature_names:", dataset["feature_names"])
         print("class_names:", dataset["class_names"])
-    else:
+    elif args.dataset == "glass":
+        if not args.data_dir:
+            raise ValueError("--data-dir is required for glass")
         dataset = load_glass(args.data_dir)
         print("Loaded glass dataset")
         print("x:", dataset["x"].shape)
@@ -368,3 +439,15 @@ if __name__ == "__main__":
         print("feature_names:", dataset["feature_names"])
         print("class_names:", dataset["class_names"])
         print("label_map:", dataset["label_map"])
+
+    elif args.dataset == "mnist":
+        dataset = load_mnist(cache_dir=args.mnist_cache_dir)
+        print("Loaded MNIST (OpenML: mnist_784)")
+        print("x_train:", dataset["x_train"].shape)
+        print("y_train:", dataset["y_train"].shape)
+        print("x_test: ", dataset["x_test"].shape)
+        print("y_test: ", dataset["y_test"].shape)
+        print("x_train_img:", dataset["x_train_img"].shape)
+        print("x_test_img: ", dataset["x_test_img"].shape)
+        print("label_names:", dataset["label_names"])
+        print("y classes:", np.unique(dataset["y_train"]))
